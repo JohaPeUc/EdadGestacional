@@ -1,0 +1,563 @@
+<html><head><base href="https://tu-dominio.com/">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Calculadora de Edad Gestacional</title>
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        min-height: 100vh;
+    }
+
+    .navbar {
+        background: #2c3e50;
+        padding: 1rem;
+        color: white;
+        display: flex;
+        align-items: center;
+        position: relative;  /* Add this */
+    }
+
+    .navbar button {
+        background: #3498db;
+        color: white;
+        border: none;
+        padding: 0.5rem 1rem;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1rem;
+    }
+
+    .navbar button:hover {
+        background: #2980b9;
+    }
+
+    .modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        text-align: center;
+    }
+
+    .modal-content button {
+        margin: 0.5rem;
+        padding: 0.5rem 1rem;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        background: #3498db;
+        color: white;
+    }
+
+    .modal-content button:hover {
+        background: #2980b9;
+    }
+
+    .content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 2rem;
+        min-height: calc(100vh - 80px);
+    }
+
+    .container {
+        background: white;
+        padding: 2rem;
+        border-radius: 10px;
+        box-shadow: 0 0 20px rgba(0,0,0,0.1);
+        text-align: center;
+    }
+
+    .container h2 {
+        color: #2c3e50;
+        margin: 2rem 0;
+        text-align: center;
+    }
+
+    .section {
+        padding: 1rem;
+        border-bottom: 1px solid #ddd;
+    }
+
+    .section:last-child {
+        border-bottom: none;
+    }
+
+    .input-group {
+        margin: 1rem 0;
+    }
+
+    input {
+        padding: 0.5rem;
+        font-size: 1.1rem;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        width: 200px;
+        text-align: center;
+    }
+
+    .result {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 5px;
+        font-size: 1.1rem;
+        line-height: 1.5;
+        text-align: center;
+    }
+
+    .error {
+        color: red;
+        font-size: 0.9rem;
+        display: none;
+    }
+
+    h3 {
+        color: #2c3e50;
+        margin-bottom: 1rem;
+    }
+
+    .semanas-input {
+        width: 60px;
+        margin-right: 5px;
+    }
+
+    .dias-input {
+        width: 60px;
+        margin-left: 5px;
+    }
+
+    .days-info {
+        margin-top: 1rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .hidden {
+        display: none;
+    }
+
+    .appointment-section {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+
+    .appointment-select {
+        padding: 0.5rem;
+        font-size: 1rem;
+        border: 2px solid #ddd;
+        border-radius: 5px;
+        margin: 0 5px;
+    }
+
+    .weeks-at-appointment {
+        margin-top: 0.5rem;
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .credits {
+        position: absolute;
+        right: 10px;
+        color: #a4b0be;
+        font-style: italic;
+    }
+
+    .appointment-date {
+        font-weight: bold;
+        margin-bottom: 1rem;
+        display: block;
+        text-align: center;
+    }
+
+    .appointment-section .result {
+        text-align: left;
+    }
+</style>
+</head>
+<body>
+    <div class="navbar">
+        <button onclick="showNewModal()">Nuevo</button>
+        <div class="credits">by Joha Peralta</div>
+    </div>
+
+    <div class="modal" id="newModal">
+        <div class="modal-content">
+            <h3>Seleccione el tipo de cálculo</h3>
+            <button onclick="selectCalculationType('fum')">Por FUM</button>
+            <button onclick="selectCalculationType('usg')">Por USG</button>
+        </div>
+    </div>
+
+    <div class="content">
+        <div class="container">
+            <h2>Calculadora de Edad Gestacional</h2>
+            <div class="section" id="fumSection">
+                <h3>Calculadora FUM</h3>
+                <div class="input-group">
+                    <label for="fumDate">Fecha Última Menstruación:</label><br>
+                    <input type="text" id="fumDate" maxlength="8" placeholder="DD/MM/AA">
+                    <div class="error" id="errorMsgFum">Fecha inválida</div>
+                </div>
+                <div class="result" id="resultFum">
+                    Los cálculos se mostrarán aquí
+                </div>
+                <div class="days-info" id="daysFum"></div>
+                <div class="appointment-section hidden" id="appointmentSectionFum">
+                    <label>Próxima cita en:</label>
+                    <select class="appointment-select" id="nextAppointmentWeeks">
+                        <option value="1">1 semana</option>
+                        <option value="2">2 semanas</option>
+                        <option value="3">3 semanas</option>
+                        <option value="4">4 semanas</option>
+                        <option value="5">5 semanas</option>
+                        <option value="6">6 semanas</option>
+                    </select>
+                    <div class="result" id="appointmentDate"></div>
+                    <div class="weeks-at-appointment" id="weeksAtAppointment"></div>
+                </div>
+            </div>
+
+            <div class="section" id="usgSection">
+                <h3>Calculadora USG</h3>
+                <div class="input-group">
+                    <label for="usgDate">Fecha de Ultrasonido:</label><br>
+                    <input type="text" id="usgDate" maxlength="8" placeholder="DD/MM/AA">
+                    <div class="error" id="errorMsgUsg">Fecha inválida</div>
+                </div>
+                <div class="input-group">
+                    <label>Semanas y días por USG:</label><br>
+                    <input type="number" id="semanasUsg" class="semanas-input" min="0" max="42" placeholder="Sem">
+                    <input type="number" id="diasUsg" class="dias-input" min="0" max="6" placeholder="Días">
+                </div>
+                <div class="result" id="resultUsg">
+                    El cálculo se mostrará aquí
+                </div>
+                <div class="days-info" id="daysUsg"></div>
+                <div class="appointment-section hidden" id="appointmentSectionUsg">
+                    <label>Próxima cita en:</label>
+                    <select class="appointment-select" id="nextAppointmentWeeksUsg">
+                        <option value="1">1 semana</option>
+                        <option value="2">2 semanas</option>
+                        <option value="3">3 semanas</option>
+                        <option value="4">4 semanas</option>
+                        <option value="5">5 semanas</option>
+                        <option value="6">6 semanas</option>
+                    </select>
+                    <div class="result" id="appointmentDateUsg"></div>
+                    <div class="weeks-at-appointment" id="weeksAtAppointmentUsg"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Inicialmente ocultar ambas secciones
+    document.getElementById('fumSection').classList.add('hidden');
+    document.getElementById('usgSection').classList.add('hidden');
+
+    function setupDateInput(inputElement, errorElement, resultElement, isUsg = false) {
+        inputElement.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            
+            if (value.length > 0) {
+                let formattedDate = '';
+                for (let i = 0; i < value.length && i < 6; i++) {
+                    if (i === 2 || i === 4) {
+                        formattedDate += '/';
+                    }
+                    formattedDate += value[i];
+                }
+                e.target.value = formattedDate;
+            }
+
+            calcularResultados();
+        });
+
+        inputElement.addEventListener('keydown', function(e) {
+            if (e.key === 'Backspace' && inputElement.value.length > 0) {
+                let value = inputElement.value.replace(/\D/g, '');
+                value = value.slice(0, -1);
+                let formattedDate = '';
+                for (let i = 0; i < value.length && i < 6; i++) {
+                    if (i === 2 || i === 4) {
+                        formattedDate += '/';
+                    }
+                    formattedDate += value[i];
+                }
+                setTimeout(() => {
+                    inputElement.value = formattedDate;
+                    calcularResultados();
+                }, 0);
+            }
+        });
+    }
+
+    function calcularDiasYSemanas(fecha) {
+        const today = new Date();
+        const diffTime = Math.abs(today - fecha);
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        
+        let semanas = diffDays / 7;
+        let semanasEnteras = Math.floor(semanas);
+        let decimal = Math.floor((semanas % 1) * 10) / 10;
+        let diasAdicionales = decimal * 10;
+
+        if (decimal === 0.7) {
+            semanasEnteras += 1;
+            diasAdicionales = 0;
+        } else if (decimal === 0.8) {
+            semanasEnteras += 1;
+            diasAdicionales = 1;
+        }
+
+        return {
+            semanas: semanasEnteras,
+            diasAdicionales: Math.floor(diasAdicionales),
+            diasTotales: diffDays
+        };
+    }
+
+    function calcularResultados() {
+        // Cálculo para FUM
+        const fumInput = document.getElementById('fumDate');
+        const resultFum = document.getElementById('resultFum');
+        const daysFum = document.getElementById('daysFum');
+        const errorMsgFum = document.getElementById('errorMsgFum');
+        
+        if (!document.getElementById('fumSection').classList.contains('hidden')) {
+            let valueFum = fumInput.value.replace(/\D/g, '');
+            if (valueFum.length === 6) {
+                const day = valueFum.substr(0, 2);
+                const month = valueFum.substr(2, 2);
+                const year = '20' + valueFum.substr(4, 2);
+                
+                const fechaFUM = new Date(year, month - 1, day);
+                
+                if (isNaN(fechaFUM.getTime()) || fechaFUM > new Date()) {
+                    errorMsgFum.style.display = 'block';
+                    resultFum.textContent = 'Fecha inválida';
+                    daysFum.textContent = '';
+                    document.getElementById('appointmentSectionFum').classList.add('hidden');
+                    return;
+                }
+
+                errorMsgFum.style.display = 'none';
+                const resultadoFum = calcularDiasYSemanas(fechaFUM);
+                resultFum.innerHTML = `${resultadoFum.semanas} semanas con ${resultadoFum.diasAdicionales} días<br>
+                                       <span class="days-info">Días transcurridos: ${resultadoFum.diasTotales}</span>`;
+
+                // Sugerir próxima cita
+                const suggestedWeeks = suggestNextAppointment(resultadoFum.semanas);
+                if (suggestedWeeks) {
+                    document.getElementById('nextAppointmentWeeks').value = suggestedWeeks;
+                    const appointmentInfo = calculateAppointmentDate(new Date(), suggestedWeeks);
+                    const weeksAtAppointment = resultadoFum.semanas + parseInt(suggestedWeeks);
+                    document.getElementById('appointmentDate').innerHTML = 
+                        `<span class="appointment-date">Fecha de cita: ${appointmentInfo.formattedDate} (${weeksAtAppointment} SG)</span>` +
+                        `-Prenatales #${appointmentInfo.days}<br>` +
+                        `-Sulfato Ferroso #${appointmentInfo.days}<br>` +
+                        `-Sulfato Ferroso (Anemia) #${appointmentInfo.days * 2}`;
+                }
+
+                // Show appointment section after valid calculation
+                document.getElementById('appointmentSectionFum').classList.remove('hidden');
+            } else {
+                document.getElementById('appointmentSectionFum').classList.add('hidden');
+            }
+        }
+
+        // Cálculo para USG
+        const usgInput = document.getElementById('usgDate');
+        const semanasUsgInput = document.getElementById('semanasUsg');
+        const diasUsgInput = document.getElementById('diasUsg');
+        const resultUsg = document.getElementById('resultUsg');
+        const daysUsg = document.getElementById('daysUsg');
+        const errorMsgUsg = document.getElementById('errorMsgUsg');
+
+        if (!document.getElementById('usgSection').classList.contains('hidden')) {
+            let valueUsg = usgInput.value.replace(/\D/g, '');
+            if (valueUsg.length === 6 && semanasUsgInput.value !== '' && diasUsgInput.value !== '') {
+                const day = valueUsg.substr(0, 2);
+                const month = valueUsg.substr(2, 2);
+                const year = '20' + valueUsg.substr(4, 2);
+                
+                const fechaUSG = new Date(year, month - 1, day);
+                
+                if (isNaN(fechaUSG.getTime()) || fechaUSG > new Date()) {
+                    errorMsgUsg.style.display = 'block';
+                    resultUsg.textContent = 'Fecha inválida';
+                    daysUsg.textContent = '';
+                    document.getElementById('appointmentSectionUsg').classList.add('hidden');
+                    return;
+                }
+
+                errorMsgUsg.style.display = 'none';
+                const resultadoUsg = calcularDiasYSemanas(fechaUSG);
+                const semanasUsg = parseInt(semanasUsgInput.value);
+                const diasUsg = parseInt(diasUsgInput.value);
+
+                let totalSemanas = resultadoUsg.semanas + semanasUsg;
+                let totalDias = resultadoUsg.diasAdicionales + diasUsg;
+
+                if (totalDias >= 7) {
+                    totalSemanas += Math.floor(totalDias / 7);
+                    totalDias = totalDias % 7;
+                }
+
+                resultUsg.innerHTML = `${totalSemanas} semanas con ${totalDias} días<br>
+                                       <span class="days-info">Días transcurridos desde USG: ${resultadoUsg.diasTotales}</span>`;
+
+                // Sugerir próxima cita
+                const suggestedWeeks = suggestNextAppointment(totalSemanas);
+                if (suggestedWeeks) {
+                    document.getElementById('nextAppointmentWeeksUsg').value = suggestedWeeks;
+                    const appointmentInfo = calculateAppointmentDate(new Date(), suggestedWeeks);
+                    const weeksAtAppointment = totalSemanas + parseInt(suggestedWeeks);
+                    document.getElementById('appointmentDateUsg').innerHTML = 
+                        `<span class="appointment-date">Fecha de cita: ${appointmentInfo.formattedDate} (${weeksAtAppointment} SG)</span>` +
+                        `-Prenatales #${appointmentInfo.days}<br>` +
+                        `-Sulfato Ferroso #${appointmentInfo.days}<br>` +
+                        `-Sulfato Ferroso (Anemia) #${appointmentInfo.days * 2}`;
+                }
+
+                // Show appointment section after valid calculation
+                document.getElementById('appointmentSectionUsg').classList.remove('hidden');
+            } else {
+                document.getElementById('appointmentSectionUsg').classList.add('hidden');
+            }
+        }
+    }
+
+    function suggestNextAppointment(currentWeeks) {
+        const ranges = [
+            { min: 22, max: 24 },
+            { min: 27, max: 29 },
+            { min: 33, max: 35 },
+            { min: 36, max: 36 },
+            { min: 37, max: 37 },
+            { min: 38, max: 38 },
+            { min: 39, max: 39 },
+            { min: 40, max: 40 }
+        ];
+
+        let nextRange = ranges.find(range => currentWeeks < range.min);
+        if (!nextRange) return null;
+
+        let weeksUntilRange = nextRange.min - currentWeeks;
+        return Math.min(weeksUntilRange, 6);
+    }
+
+    function calculateAppointmentDate(currentDate, weeksToAdd) {
+        let appointmentDate = new Date(currentDate);
+        appointmentDate.setDate(appointmentDate.getDate() + (weeksToAdd * 7));
+        const daysUntilAppointment = weeksToAdd * 7;
+        
+        return {
+            formattedDate: `${appointmentDate.getDate().toString().padStart(2, '0')}/${(appointmentDate.getMonth() + 1).toString().padStart(2, '0')}/${appointmentDate.getFullYear().toString().slice(-2)}`,
+            days: daysUntilAppointment
+        };
+    }
+
+    // Setup inputs
+    const fumInput = document.getElementById('fumDate');
+    const usgInput = document.getElementById('usgDate');
+    const semanasUsgInput = document.getElementById('semanasUsg');
+    const diasUsgInput = document.getElementById('diasUsg');
+    setupDateInput(fumInput, 'errorMsgFum', 'resultFum');
+    setupDateInput(usgInput, 'errorMsgUsg', 'resultUsg', true);
+
+    semanasUsgInput.addEventListener('input', calcularResultados);
+    diasUsgInput.addEventListener('input', calcularResultados);
+
+    document.getElementById('nextAppointmentWeeks').addEventListener('change', function(e) {
+        const weeksToAdd = parseInt(e.target.value);
+        const appointmentInfo = calculateAppointmentDate(new Date(), weeksToAdd);
+        const currentWeeksText = document.getElementById('resultFum').textContent;
+        const currentWeeks = parseInt(currentWeeksText);
+        const weeksAtAppointment = currentWeeks + weeksToAdd;
+        
+        document.getElementById('appointmentDate').innerHTML = 
+            `<span class="appointment-date">Fecha de cita: ${appointmentInfo.formattedDate} (${weeksAtAppointment} SG)</span>` +
+            `-Prenatales #${appointmentInfo.days}<br>` +
+            `-Sulfato Ferroso #${appointmentInfo.days}<br>` +
+            `-Sulfato Ferroso (Anemia) #${appointmentInfo.days * 2}`;
+    });
+
+    document.getElementById('nextAppointmentWeeksUsg').addEventListener('change', function(e) {
+        const weeksToAdd = parseInt(e.target.value);
+        const appointmentInfo = calculateAppointmentDate(new Date(), weeksToAdd);
+        const currentWeeksText = document.getElementById('resultUsg').textContent;
+        const currentWeeks = parseInt(currentWeeksText);
+        const weeksAtAppointment = currentWeeks + weeksToAdd;
+        
+        document.getElementById('appointmentDateUsg').innerHTML = 
+            `<span class="appointment-date">Fecha de cita: ${appointmentInfo.formattedDate} (${weeksAtAppointment} SG)</span>` +
+            `-Prenatales #${appointmentInfo.days}<br>` +
+            `-Sulfato Ferroso #${appointmentInfo.days}<br>` +
+            `-Sulfato Ferroso (Anemia) #${appointmentInfo.days * 2}`;
+    });
+
+    // Hacer accesibles las funciones globalmente
+    window.showNewModal = function() {
+        document.getElementById('newModal').style.display = 'flex';
+    }
+
+    window.selectCalculationType = function(type) {
+        document.getElementById('newModal').style.display = 'none';
+        
+        // Hide initial title if exists
+        const titles = document.querySelector('.container h2');
+        if (titles) {
+            titles.style.display = 'none';
+        }
+
+        // Limpiar todos los campos
+        document.getElementById('fumDate').value = '';
+        document.getElementById('usgDate').value = '';
+        document.getElementById('semanasUsg').value = '';
+        document.getElementById('diasUsg').value = '';
+        document.getElementById('nextAppointmentWeeks').value = '';
+        document.getElementById('nextAppointmentWeeksUsg').value = '';
+        document.getElementById('resultFum').textContent = 'Los cálculos se mostrarán aquí';
+        document.getElementById('resultUsg').textContent = 'El cálculo se mostrará aquí';
+        document.getElementById('daysFum').textContent = '';
+        document.getElementById('daysUsg').textContent = '';
+        document.getElementById('appointmentDate').textContent = '';
+        document.getElementById('appointmentDateUsg').textContent = '';
+
+        // Hide appointment sections
+        document.getElementById('appointmentSectionFum').classList.add('hidden');
+        document.getElementById('appointmentSectionUsg').classList.add('hidden');
+
+        if (type === 'fum') {
+            document.getElementById('fumSection').classList.remove('hidden');
+            document.getElementById('usgSection').classList.add('hidden');
+        } else {
+            document.getElementById('fumSection').classList.add('hidden');
+            document.getElementById('usgSection').classList.remove('hidden');
+        }
+    }
+});
+</script>
+</body>
+</html>
