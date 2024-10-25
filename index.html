@@ -70,10 +70,12 @@
 
     .content {
         display: flex;
-        justify-content: center;
+        justify-content: flex-start;  /* Change from center to flex-start */
         align-items: center;
         padding: 2rem;
         min-height: calc(100vh - 80px);
+        flex-direction: column;  /* Add this to stack content vertically */
+        padding-top: 1rem;  /* Reduce top padding */
     }
 
     .container {
@@ -82,6 +84,8 @@
         border-radius: 10px;
         box-shadow: 0 0 20px rgba(0,0,0,0.1);
         text-align: center;
+        width: 90%;  /* Add this to control container width */
+        max-width: 800px;  /* Add this to limit maximum width */
     }
 
     .container h2 {
@@ -214,7 +218,7 @@
                 <h3>Calculadora FUM</h3>
                 <div class="input-group">
                     <label for="fumDate">Fecha Última Menstruación:</label><br>
-                    <input type="text" id="fumDate" maxlength="8" placeholder="DD/MM/AA">
+                    <input type="text" id="fumDate" maxlength="8" placeholder="DD/MM/AA" autocomplete="off">
                     <div class="error" id="errorMsgFum">Fecha inválida</div>
                 </div>
                 <div class="result" id="resultFum">
@@ -240,7 +244,7 @@
                 <h3>Calculadora USG</h3>
                 <div class="input-group">
                     <label for="usgDate">Fecha de Ultrasonido:</label><br>
-                    <input type="text" id="usgDate" maxlength="8" placeholder="DD/MM/AA">
+                    <input type="text" id="usgDate" maxlength="8" placeholder="DD/MM/AA" autocomplete="off">
                     <div class="error" id="errorMsgUsg">Fecha inválida</div>
                 </div>
                 <div class="input-group">
@@ -363,7 +367,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 errorMsgFum.style.display = 'none';
                 const resultadoFum = calcularDiasYSemanas(fechaFUM);
-                resultFum.innerHTML = `${resultadoFum.semanas} semanas con ${resultadoFum.diasAdicionales} días<br>
+                resultFum.innerHTML = `${resultadoFum.semanas} semanas${resultadoFum.diasAdicionales > 0 ? ` con ${resultadoFum.diasAdicionales} días` : ''}<br>
                                        <span class="days-info">Días transcurridos: ${resultadoFum.diasTotales}</span>`;
 
                 // Sugerir próxima cita
@@ -372,8 +376,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('nextAppointmentWeeks').value = suggestedWeeks;
                     const appointmentInfo = calculateAppointmentDate(new Date(), suggestedWeeks);
                     const weeksAtAppointment = resultadoFum.semanas + parseInt(suggestedWeeks);
+                    const daysDisplay = resultadoFum.diasAdicionales > 0 ? `.${resultadoFum.diasAdicionales}` : '';
                     document.getElementById('appointmentDate').innerHTML = 
-                        `<span class="appointment-date">Fecha de cita: ${appointmentInfo.formattedDate} (${weeksAtAppointment} SG)</span>` +
+                        `<span class="appointment-date">Fecha de cita: ${appointmentInfo.formattedDate} (${weeksAtAppointment}${daysDisplay} SG)</span>` +
                         `-Prenatales #${appointmentInfo.days}<br>` +
                         `-Sulfato Ferroso #${appointmentInfo.days}<br>` +
                         `-Sulfato Ferroso (Anemia) #${appointmentInfo.days * 2}`;
@@ -424,7 +429,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     totalDias = totalDias % 7;
                 }
 
-                resultUsg.innerHTML = `${totalSemanas} semanas con ${totalDias} días<br>
+                resultUsg.innerHTML = `${totalSemanas} semanas${totalDias > 0 ? ` con ${totalDias} días` : ''}<br>
                                        <span class="days-info">Días transcurridos desde USG: ${resultadoUsg.diasTotales}</span>`;
 
                 // Sugerir próxima cita
@@ -433,8 +438,9 @@ document.addEventListener('DOMContentLoaded', function() {
                     document.getElementById('nextAppointmentWeeksUsg').value = suggestedWeeks;
                     const appointmentInfo = calculateAppointmentDate(new Date(), suggestedWeeks);
                     const weeksAtAppointment = totalSemanas + parseInt(suggestedWeeks);
+                    const daysDisplay = totalDias > 0 ? `.${totalDias}` : '';
                     document.getElementById('appointmentDateUsg').innerHTML = 
-                        `<span class="appointment-date">Fecha de cita: ${appointmentInfo.formattedDate} (${weeksAtAppointment} SG)</span>` +
+                        `<span class="appointment-date">Fecha de cita: ${appointmentInfo.formattedDate} (${weeksAtAppointment}${daysDisplay} SG)</span>` +
                         `-Prenatales #${appointmentInfo.days}<br>` +
                         `-Sulfato Ferroso #${appointmentInfo.days}<br>` +
                         `-Sulfato Ferroso (Anemia) #${appointmentInfo.days * 2}`;
@@ -451,7 +457,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function suggestNextAppointment(currentWeeks) {
         const ranges = [
             { min: 22, max: 24 },
-            { min: 27, max: 29 },
+            { min: 28, max: 29 },
             { min: 33, max: 35 },
             { min: 36, max: 36 },
             { min: 37, max: 37 },
@@ -494,10 +500,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const appointmentInfo = calculateAppointmentDate(new Date(), weeksToAdd);
         const currentWeeksText = document.getElementById('resultFum').textContent;
         const currentWeeks = parseInt(currentWeeksText);
+        
+        // Extract days if present
+        const daysMatch = currentWeeksText.match(/con (\d+) días/);
+        const currentDays = daysMatch ? parseInt(daysMatch[1]) : 0;
+        
         const weeksAtAppointment = currentWeeks + weeksToAdd;
+        const daysDisplay = currentDays > 0 ? `.${currentDays}` : '';
         
         document.getElementById('appointmentDate').innerHTML = 
-            `<span class="appointment-date">Fecha de cita: ${appointmentInfo.formattedDate} (${weeksAtAppointment} SG)</span>` +
+            `<span class="appointment-date">Fecha de cita: ${appointmentInfo.formattedDate} (${weeksAtAppointment}${daysDisplay} SG)</span>` +
             `-Prenatales #${appointmentInfo.days}<br>` +
             `-Sulfato Ferroso #${appointmentInfo.days}<br>` +
             `-Sulfato Ferroso (Anemia) #${appointmentInfo.days * 2}`;
@@ -508,10 +520,16 @@ document.addEventListener('DOMContentLoaded', function() {
         const appointmentInfo = calculateAppointmentDate(new Date(), weeksToAdd);
         const currentWeeksText = document.getElementById('resultUsg').textContent;
         const currentWeeks = parseInt(currentWeeksText);
+        
+        // Extract days if present
+        const daysMatch = currentWeeksText.match(/con (\d+) días/);
+        const currentDays = daysMatch ? parseInt(daysMatch[1]) : 0;
+        
         const weeksAtAppointment = currentWeeks + weeksToAdd;
+        const daysDisplay = currentDays > 0 ? `.${currentDays}` : '';
         
         document.getElementById('appointmentDateUsg').innerHTML = 
-            `<span class="appointment-date">Fecha de cita: ${appointmentInfo.formattedDate} (${weeksAtAppointment} SG)</span>` +
+            `<span class="appointment-date">Fecha de cita: ${appointmentInfo.formattedDate} (${weeksAtAppointment}${daysDisplay} SG)</span>` +
             `-Prenatales #${appointmentInfo.days}<br>` +
             `-Sulfato Ferroso #${appointmentInfo.days}<br>` +
             `-Sulfato Ferroso (Anemia) #${appointmentInfo.days * 2}`;
